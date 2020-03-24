@@ -99,7 +99,7 @@ class Game {
             }
         } else {
 			console.log('win');
-            this.gameOver(`${target.owner.name} wins!`)
+            this.gameOver(`${target.owner.name} wins!`);
         }			
     }
 
@@ -174,7 +174,7 @@ class Game {
      * Switches active player. 
      */
 	switchPlayers() {
-		for (let player of this.players) {
+		for (let player in this.players) {
 			player.active = player.active === true ? false : true;
 		}
     }

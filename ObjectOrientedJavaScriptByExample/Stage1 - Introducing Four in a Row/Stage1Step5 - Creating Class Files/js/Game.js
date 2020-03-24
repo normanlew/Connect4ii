@@ -12,6 +12,12 @@ class Game {
         return players;
     }
 
+    switchPlayers() {
+        for (let player in this.players) {
+            player.active = player.active === true ? false : true;
+        }
+    }
+
     /*
     * Gets game ready for play
     */
@@ -21,7 +27,125 @@ class Game {
         this.ready = true;
     }
 
+    gameOver(message) {
+        const gameOverTag = document.getElementById('game-over');
+        gameOverTag.style.display = 'block';
+        gameOverTag.innerHTML = message;
+    }
+
     get activePlayer() {
         return this.players.find(player => player.active);
+    }
+
+
+
+    handleKeydown(e) {
+        if (this.ready) {
+            if (e.key === 'ArrowLeft') {
+                this.activePlayer.activeToken.moveLeft();
+
+            } 
+            else if (e.key === 'ArrowRight') {
+                this.activePlayer.activeToken.moveRight(this.board.columns);
+
+            }
+            else if (e.key === 'ArrowDown') {
+                this.playToken();
+            }
+        }
+    }
+
+    playToken() {
+        let spaces = this.board.spaces;
+        let activeToken = this.activePlayer.activeToken;
+        let targetColumn = spaces[activeToken.columnLocation];
+        let targetSpace = null;
+        const thisGame = this;
+        
+        for (let space of targetColumn) {
+            if (space.token === null) {
+                targetSpace = space;
+            }
+        }
+
+        if (targetSpace !== null) {
+            theGame.ready = false;
+            activeToken.drop(targetSpace, function() {
+                thisGame.updateGameState(activeToken, targetSpace);
+            });
+        }
+    }
+
+    checkForWin(target){
+        const owner = target.token.owner;
+        let win = false;
+    
+        // vertical
+        for (let x = 0; x < this.board.columns; x++ ){
+            for (let y = 0; y < this.board.rows - 3; y++){
+                if (this.board.spaces[x][y].owner === owner && 
+                    this.board.spaces[x][y+1].owner === owner && 
+                    this.board.spaces[x][y+2].owner === owner && 
+                    this.board.spaces[x][y+3].owner === owner) {
+                        win = true;
+                }           
+            }
+        }
+    
+        // horizontal
+        for (let x = 0; x < this.board.columns - 3; x++ ){
+            for (let y = 0; y < this.board.rows; y++){
+                if (this.board.spaces[x][y].owner === owner && 
+                    this.board.spaces[x+1][y].owner === owner && 
+                    this.board.spaces[x+2][y].owner === owner && 
+                    this.board.spaces[x+3][y].owner === owner) {
+                        win = true;
+                }           
+            }
+        }
+    
+        // diagonal
+        for (let x = 3; x < this.board.columns; x++ ){
+            for (let y = 0; y < this.board.rows - 3; y++){
+                if (this.board.spaces[x][y].owner === owner && 
+                    this.board.spaces[x-1][y+1].owner === owner && 
+                    this.board.spaces[x-2][y+2].owner === owner && 
+                    this.board.spaces[x-3][y+3].owner === owner) {
+                        win = true;
+                }           
+            }
+        }
+    
+        // diagonal
+        for (let x = 3; x < this.board.columns; x++ ){
+            for (let y = 3; y < this.board.rows; y++){
+                if (this.board.spaces[x][y].owner === owner && 
+                    this.board.spaces[x-1][y-1].owner === owner && 
+                    this.board.spaces[x-2][y-2].owner === owner && 
+                    this.board.spaces[x-3][y-3].owner === owner) {
+                        win = true;
+                }           
+            }
+        }
+    
+        return win;
+    }
+    
+    updateGameState(token, target) {
+        target.mark(token);
+
+        if (this.checkForWin(target)) {
+            this.gameOver(`${target.owner.name} wins!`);
+        }
+        else {
+            this.switchPlayers();
+            if (this.activePlayer.checkTokens()) {
+                this.activePlayer.activeToken.drawHTMLToken();
+                this.ready = true;
+            }
+            else {
+                this.gameOver('Game Over');
+            }
+        }
     }
 }
